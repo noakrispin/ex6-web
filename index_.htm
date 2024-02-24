@@ -18,91 +18,80 @@
     let startPageNum = 0;
 
     $(() => {
-      fetchText1();
-    })
+      fetchData()
+    });
 
-    const fetchText1 = async () => {
+    const fetchData = async () => {
       try {
-        const newUrl = `${url}&startPageNum=${startPageNum}`;
-        let response = await fetch(newUrl, opt);
-        let data = await response.json();
-        createTable(data);
+        let response = await fetch(url, opt)
+        let data = await response.json()
+        const pageData = data.products;
+        createTable(pageData)
       } catch (e) {
         console.error(e)
       }
-    }
-
-    const createTableHeader = () => {
-      const tr = $('<tr/>');
-      const tableHeaders = ["Title", "Description", "Rating", "Price"];
-      tableHeaders.forEach((head) => {
-        const th = $('<th/>').addClass("bg-yellow-200 px-4 py-3 text-middle").text(head);
-        tr.append(th);
-      });
-      return tr;
-    }
-
-    const createRow = (row) => {
-      const tr = $('<tr/>').addClass("border bg-yellow-50");
-      const tdTitle = $("<td/>").addClass("px-4 text-wrap").text(row.title);
-      const tdDescription = $("<td/>").addClass("px-4 text-wrap").text(row.description);
-      const tdRating = $("<td/>").addClass("px-4 text-wrap").text(row.rating);
-      const tdPrice = $("<td/>").addClass("px-4 text-wrap").text(row.price);
-      tr.append(tdTitle, tdDescription, tdRating, tdPrice);
-      return tr;
-    }
+    };
 
     const createTable = (data) => {
-      let container = $("#myTable")
-      container.empty(); // Clear existing table content
-      
-      // create table
-      let tb = $("<table/>").addClass("table table-bordered table-hovered mx-auto")
+      let container = $("#myTable");
+      container.empty();
 
-      // create and append (to table) header row
-      let trh = createTableHeader()
-      tb.append(trh)
+      let tb = $("<table>").addClass("table table-bordered table-hovered");
+      let trh = createTableHeader();
+      tb.append(trh);
 
-      const start = (current - 1) * itemsForPage;
-      const end = Math.min(start + itemsForPage, data.products.length);
-      const page = data.products.slice(start, end);
+      const startIndex = (currentPage - 1) * pageSize;
+      const endIndex = Math.min(startIndex + pageSize, data.length);
 
-      page.forEach((row) => {
-        const tr = createRow(row);
+      for (let i = startIndex; i < endIndex; i++) {
+        let tr = createRow(data[i]);
         tb.append(tr);
-      });
+      }
 
       container.append(tb);
 
-      // Add page controls
-      const pagerControls = $("#paging");
-      pagerControls.empty();
+      const pagination = $("#pagination");
+      pagination.empty();
 
-      if (startPageNum > 0) {
-        const backButton = $("<button/>")
-          .addClass("px-4 py-2 bg-blue-200 hover:bg-gray-500")
-          .text("Back")
-          .click(() => {
-            startPageNum--;
-            current--;
-            fetchText1();
-          });
-        pagerControls.append(backButton);
+      if (currentPage > 1) {
+        const prevBtn = $("<button>").addClass("bg-blue-500 text-white font-semibold px-6 py-3 rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring focus:border-blue-300").text("Previous").click(() => {
+          currentPage--;
+          offset -= pageSize; // for getting the updated data
+          fetchData(); // for creating new table with new data instead of the old table
+        });
+        pagination.append(prevBtn);
       }
 
-      const endIndex = Math.min(start + itemsForPage, data.products.length);
-      if (endIndex < data.products.length) {
-        const nextButton = $("<button/>")
-          .addClass("px-4 py-2 bg-blue-200 hover:bg-gray-500 ")
-          .text("Next")
-          .click(() => {
-            startPageNum++;
-            current++;
-            fetchText1();
-          });
-        pagerControls.append(nextButton);
+      if (endIndex < data.length) {
+        const nextBtn = $("<button>").addClass("bg-blue-500 text-white font-semibold px-6 py-3 rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring focus:border-blue-300").text("Next").click(() => {
+          currentPage++;
+          offset += pageSize;
+          fetchData();
+        });
+        pagination.append(nextBtn);
       }
-    }
+    };
+
+    const createTableHeader = () => {
+      const headers = ["#", "Title", "Price", "Brand", "About"];
+      const tr = $("<tr>").addClass("bg-gray-100");
+      headers.forEach(header => {
+        const th = $("<th>").addClass("bg-blue-500 text-white font-semibold px-4 py-2 rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring focus:border-blue-300 text-sm").text(header);
+        tr.append(th);
+      });
+      return tr;
+    };
+
+    const createRow = (row) => {
+      const tr = $("<tr>").addClass("bg-white hover:bg-gray-100");
+      const rowData = [row.id, row.title, row.price, row.brand, row.description];
+      rowData.forEach(data => {
+        const td = $("<td>").addClass("border border-gray-300 px-4 py-2 text-xs").text(data);
+        tr.append(td);
+      });
+      return tr;
+    };
+    
   </script>
 </head>
 <body>
